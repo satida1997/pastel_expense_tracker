@@ -11,8 +11,15 @@
       font-family: 'Kanit', sans-serif;
       background-color: #FFF9FB;
     }
+
     .active-btn {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+      transform: scale(1.05);
+      transition: all 0.2s ease-in-out;
+    }
+
+    .btn-toggle {
+      transition: all 0.2s ease-in-out;
     }
   </style>
 </head>
@@ -44,8 +51,8 @@
     <!-- Form -->
     <div class="bg-white p-4 rounded-xl shadow mb-6">
       <div class="flex justify-center gap-4 mb-4">
-        <button id="incomeBtn" class="px-4 py-2 bg-blue-300 text-white rounded-full active-btn">รายรับ</button>
-        <button id="expenseBtn" class="px-4 py-2 bg-red-300 text-white rounded-full">รายจ่าย</button>
+        <button id="incomeBtn" class="btn-toggle px-4 py-2 bg-blue-300 text-white rounded-full active-btn">รายรับ</button>
+        <button id="expenseBtn" class="btn-toggle px-4 py-2 bg-red-300 text-white rounded-full">รายจ่าย</button>
       </div>
       <input type="text" id="description" placeholder="ชื่อรายการ เช่น ข้าวหมูทอด" class="w-full mb-3 p-2 border rounded" />
       <input type="number" id="amount" placeholder="จำนวนเงิน" class="w-full mb-3 p-2 border rounded" />
@@ -60,10 +67,10 @@
       <button onclick="submitData()" class="w-full bg-pink-400 hover:bg-pink-500 text-white py-2 rounded-full">🐣 บันทึกรายการ</button>
     </div>
 
-    <!-- Record list -->
+    <!-- รายการย้อนหลัง -->
     <div class="bg-white p-4 rounded-xl shadow">
       <h2 class="text-lg font-bold text-pink-600 mb-2">📅 รายการย้อนหลัง</h2>
-      <ul id="recordList" class="text-sm space-y-2"></ul>
+      <div id="recordList" class="text-sm space-y-4"></div>
     </div>
   </div>
 
@@ -129,13 +136,27 @@
       const list = document.getElementById("recordList");
       list.innerHTML = "";
 
+      // จัดกลุ่มตามวันที่
+      const grouped = {};
       data.forEach(row => {
-        const li = document.createElement("li");
-        li.innerHTML = `${row.date} - ${row.description} - <span class='${row.amount >= 0 ? 'text-blue-600' : 'text-red-500'}'>${row.amount >= 0 ? '+' : ''}${row.amount}</span> บาท`;
-        list.appendChild(li);
+        const date = row.date;
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(row);
 
         if (row.amount >= 0) totalIncome += row.amount;
         else totalExpense += row.amount;
+      });
+
+      // สร้างรายการแยกตามวัน
+      Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+        const daySection = document.createElement("div");
+        daySection.innerHTML = `<div class="font-bold text-pink-500">${date}</div>`;
+        grouped[date].forEach(row => {
+          const div = document.createElement("div");
+          div.innerHTML = `• ${row.description} <span class="${row.amount >= 0 ? 'text-blue-600' : 'text-red-500'}">${row.amount >= 0 ? '+' : ''}${row.amount}</span> บาท`;
+          daySection.appendChild(div);
+        });
+        list.appendChild(daySection);
       });
 
       document.getElementById("totalIncome").textContent = `฿${totalIncome}`;
